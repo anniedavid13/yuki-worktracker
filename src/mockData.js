@@ -1,9 +1,31 @@
 export const MOCK_TEAM = [
-  { id: 't1', name: 'Annie David',   email: 'annie.david@crossbo.com', color: '#E879A8' },
-  { id: 't2', name: 'Alex Kim',      email: 'alex@crossbo.com',        color: '#C084FC' },
-  { id: 't3', name: 'Jordan Lee',    email: 'jordan@crossbo.com',      color: '#86EFAC' },
-  { id: 't4', name: 'Sam Rivera',    email: 'sam@crossbo.com',         color: '#FCD34D' },
+  { id: 't1', name: 'Annie',    email: 'annie@crossbo.com',    color: '#E879A8', role: 'Product & Founder' },
+  { id: 't2', name: 'Anannya', email: 'anannya@crossbo.com',  color: '#C084FC', role: 'Legal & Marketing' },
+  { id: 't3', name: 'Shivam',  email: 'shivam@crossbo.com',   color: '#60A5FA', role: 'Backend' },
+  { id: 't4', name: 'Mudita',  email: 'mudita@crossbo.com',   color: '#86EFAC', role: 'Frontend & Setup' },
 ];
+
+// Workstream → owner mapping
+const WORKSTREAM_OWNER = {
+  'Legal & Content':      't2',
+  'Marketing & Channels': 't2',
+  'LinkedIn':             't2',
+  'Newsletter':           't2',
+  'Outreach':             't2',
+  'Marketing Engine':     't2',
+  'Functional':           't3',
+  'Performance':          't3',
+  'Build':                't3',
+  'Store Prep':           't3',
+  'Website/PWA':          't4',
+  'Setup':                't4',
+};
+
+function assignOwner(workstream, phase) {
+  if (WORKSTREAM_OWNER[workstream]) return WORKSTREAM_OWNER[workstream];
+  // Phase-based fallback → Annie
+  return 't1';
+}
 
 let _id = 200;
 const uid = () => `mock-${++_id}`;
@@ -14,17 +36,20 @@ function to2026(date) {
 }
 
 function makeTask(o) {
+  const workstream = o.workstream || '';
+  const phase = o.phaseName || o.phase || '';
+  const owner_id = assignOwner(workstream, phase);
   return {
     id: uid(),
     title: o.task || o.title || 'Untitled',
     description: '',
     status: o.status || 'Open',
-    phase: o.phaseName || o.phase || '',
-    workstream: o.workstream || '',
+    phase,
+    workstream,
     priority: o.critical === 'YES' ? 'Critical' : o.priority || 'Normal',
     due_date: to2026(o.dueDate || null),
-    owner_id: null,
-    assignee_ids: [],
+    owner_id,
+    assignee_ids: [owner_id],
     mentioned_ids: [],
     parent_id: null,
     tags: o.tags ? (Array.isArray(o.tags) ? o.tags : [o.tags]) : [],
@@ -46,13 +71,13 @@ async function loadSeedTasks() {
   }
 }
 
-const STORAGE_KEY = 'yuki_tracker_tasks';
-const TEAM_KEY = 'yuki_tracker_team';
-const COMMENTS_KEY = 'yuki_tracker_comments';
+const STORAGE_KEY   = 'yuki_tracker_tasks';
+const TEAM_KEY      = 'yuki_tracker_team';
+const COMMENTS_KEY  = 'yuki_tracker_comments';
+const VERSION_KEY   = 'yuki_tracker_version';
+const CURRENT_VER   = 'v3'; // bump to force re-seed
 
-function saveTasks(tasks) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
+function saveTasks(tasks) { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
 
 export function loadTasks() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -60,43 +85,49 @@ export function loadTasks() {
 }
 
 export function loadTeam() {
-  const raw = localStorage.getItem(TEAM_KEY);
-  return raw ? JSON.parse(raw) : MOCK_TEAM;
+  // Always return canonical team — users can add more but core 4 stay fixed
+  const stored = localStorage.getItem(TEAM_KEY);
+  if (!stored) return MOCK_TEAM;
+  const parsed = JSON.parse(stored);
+  // Merge: keep core 4 up to date, append any extras
+  const extras = parsed.filter(m => !MOCK_TEAM.find(c => c.id === m.id));
+  return [...MOCK_TEAM, ...extras];
 }
 
-export function saveTeam(team) {
-  localStorage.setItem(TEAM_KEY, JSON.stringify(team));
-}
+export function saveTeam(team) { localStorage.setItem(TEAM_KEY, JSON.stringify(team)); }
 
 export function loadComments() {
   const raw = localStorage.getItem(COMMENTS_KEY);
   return raw ? JSON.parse(raw) : [];
 }
-
-export function saveComments(comments) {
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-}
+export function saveComments(c) { localStorage.setItem(COMMENTS_KEY, JSON.stringify(c)); }
 
 export async function initMockStore() {
-  let tasks = loadTasks();
-  if (!tasks) {
+  const version = localStorage.getItem(VERSION_KEY);
+  let tasks;
+
+  if (version !== CURRENT_VER) {
+    // Force re-seed with new team assignments
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(VERSION_KEY, CURRENT_VER);
     tasks = await loadSeedTasks();
     if (tasks.length === 0) {
       tasks = [
-        makeTask({ task: 'Set up project repo', workstream: 'Functional', status: 'Done', priority: 'High', phaseName: 'Pre-MVP', dueDate: '2026-06-01' }),
-        makeTask({ task: 'Design landing page', workstream: 'Website/PWA', status: 'In Progress', priority: 'High', phaseName: 'Pre-MVP', dueDate: '2026-06-10' }),
-        makeTask({ task: 'Write privacy policy', workstream: 'Legal & Content', status: 'Open', priority: 'Normal', phaseName: 'Pre-MVP', dueDate: '2026-06-15' }),
-        makeTask({ task: 'Set up analytics', workstream: 'Setup', status: 'Open', priority: 'High', phaseName: 'Analytics & Tracking', dueDate: '2026-06-08' }),
-        makeTask({ task: 'Launch day comms plan', workstream: 'Marketing & Channels', status: 'Open', priority: 'Critical', phaseName: 'Launch Day', dueDate: '2026-07-01' }),
+        makeTask({ task: 'Set up project repo',      workstream: 'Functional',          status: 'Done',        priority: 'High',     phaseName: 'Pre-MVP',              dueDate: '2026-06-01' }),
+        makeTask({ task: 'Design landing page',      workstream: 'Website/PWA',         status: 'In Progress', priority: 'High',     phaseName: 'Pre-MVP',              dueDate: '2026-06-10' }),
+        makeTask({ task: 'Write privacy policy',     workstream: 'Legal & Content',     status: 'Open',        priority: 'Normal',   phaseName: 'Pre-MVP',              dueDate: '2026-06-15' }),
+        makeTask({ task: 'Set up analytics',         workstream: 'Setup',               status: 'Open',        priority: 'High',     phaseName: 'Analytics & Tracking', dueDate: '2026-06-08' }),
+        makeTask({ task: 'Launch day comms plan',    workstream: 'Marketing & Channels',status: 'Open',        priority: 'Critical', phaseName: 'Launch Day',           dueDate: '2026-07-01' }),
       ];
     }
   } else {
-    // Migrate any pre-2026 dates to 2026
-    const migrated = tasks.map(t => t.due_date && !t.due_date.startsWith('2026') ? { ...t, due_date: to2026(t.due_date) } : t);
-    if (migrated.some((t, i) => t.due_date !== tasks[i].due_date)) {
-      tasks = migrated;
-    }
+    tasks = loadTasks() || await loadSeedTasks();
+    const migrated = tasks.map(t =>
+      t.due_date && !t.due_date.startsWith('2026') ? { ...t, due_date: to2026(t.due_date) } : t
+    );
+    tasks = migrated;
   }
+
   saveTasks(tasks);
   return tasks;
 }

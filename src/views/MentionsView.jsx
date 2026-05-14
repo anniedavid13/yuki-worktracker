@@ -3,11 +3,10 @@ import Avatar from '../components/Avatar';
 import StatusChip from '../components/StatusChip';
 import { format, parseISO } from 'date-fns';
 
-const CURRENT_USER_ID = 't1';
-
-export default function MentionsView({ tasks, team, onOpenTask, onUpdate }) {
+export default function MentionsView({ tasks, team, onOpenTask, onUpdate, currentUserId = 't1' }) {
   const memberById = Object.fromEntries(team.map(m => [m.id, m]));
-  const me = memberById[CURRENT_USER_ID];
+  const me = memberById[currentUserId];
+  const CURRENT_USER_ID = currentUserId;
 
   const mentioned = tasks.filter(t =>
     (t.mentioned_ids || []).includes(CURRENT_USER_ID) ||
