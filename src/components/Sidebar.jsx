@@ -75,13 +75,10 @@ export default function Sidebar({ view, setView, team, onAddMember, mentionCount
                   <div style={{ position: 'absolute', top: -2, right: -2, width: 9, height: 9, borderRadius: '50%', background: T.accent, border: `2px solid ${T.sidebar}` }} />
                 )}
               </div>
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {m.name}
-                  {currentUser?.id === m.id && <span style={{ fontSize: 10, color: T.textMuted }}> (you)</span>}
-                </div>
-                {m.role && <div style={{ fontSize: 10, color: T.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.role}</div>}
-              </div>
+              <span style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                {m.name}
+                {currentUser?.id === m.id && <span style={{ fontSize: 10, color: T.textMuted }}> (you)</span>}
+              </span>
             </div>
           ))}
         </div>

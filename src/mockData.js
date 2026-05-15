@@ -32,7 +32,10 @@ const uid = () => `mock-${++_id}`;
 
 function to2026(date) {
   if (!date) return null;
-  return date.replace(/^20\d\d/, '2026');
+  // Shift year to 2026, then add 2 months so all dates land in July–October 2026
+  const d = new Date(date.replace(/^20\d\d/, '2026'));
+  d.setMonth(d.getMonth() + 2);
+  return d.toISOString().split('T')[0];
 }
 
 function makeTask(o) {
@@ -75,7 +78,7 @@ const STORAGE_KEY   = 'yuki_tracker_tasks';
 const TEAM_KEY      = 'yuki_tracker_team';
 const COMMENTS_KEY  = 'yuki_tracker_comments';
 const VERSION_KEY   = 'yuki_tracker_version';
-const CURRENT_VER   = 'v3'; // bump to force re-seed
+const CURRENT_VER   = 'v5'; // bump to force re-seed: dates shifted to Jul–Oct 2026 (future)
 
 function saveTasks(tasks) { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
 
@@ -113,11 +116,11 @@ export async function initMockStore() {
     tasks = await loadSeedTasks();
     if (tasks.length === 0) {
       tasks = [
-        makeTask({ task: 'Set up project repo',      workstream: 'Functional',          status: 'Done',        priority: 'High',     phaseName: 'Pre-MVP',              dueDate: '2026-06-01' }),
-        makeTask({ task: 'Design landing page',      workstream: 'Website/PWA',         status: 'In Progress', priority: 'High',     phaseName: 'Pre-MVP',              dueDate: '2026-06-10' }),
-        makeTask({ task: 'Write privacy policy',     workstream: 'Legal & Content',     status: 'Open',        priority: 'Normal',   phaseName: 'Pre-MVP',              dueDate: '2026-06-15' }),
-        makeTask({ task: 'Set up analytics',         workstream: 'Setup',               status: 'Open',        priority: 'High',     phaseName: 'Analytics & Tracking', dueDate: '2026-06-08' }),
-        makeTask({ task: 'Launch day comms plan',    workstream: 'Marketing & Channels',status: 'Open',        priority: 'Critical', phaseName: 'Launch Day',           dueDate: '2026-07-01' }),
+        makeTask({ task: 'Set up project repo',      workstream: 'Functional',          status: 'Done',        priority: 'High',     phaseName: 'Pre-MVP',              dueDate: '2026-08-01' }),
+        makeTask({ task: 'Design landing page',      workstream: 'Website/PWA',         status: 'In Progress', priority: 'High',     phaseName: 'Pre-MVP',              dueDate: '2026-08-10' }),
+        makeTask({ task: 'Write privacy policy',     workstream: 'Legal & Content',     status: 'Open',        priority: 'Normal',   phaseName: 'Pre-MVP',              dueDate: '2026-08-15' }),
+        makeTask({ task: 'Set up analytics',         workstream: 'Setup',               status: 'Open',        priority: 'High',     phaseName: 'Analytics & Tracking', dueDate: '2026-08-08' }),
+        makeTask({ task: 'Launch day comms plan',    workstream: 'Marketing & Channels',status: 'Open',        priority: 'Critical', phaseName: 'Launch Day',           dueDate: '2026-09-01' }),
       ];
     }
   } else {
