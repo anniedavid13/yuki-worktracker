@@ -7,18 +7,31 @@ export const MOCK_TEAM = [
 
 // Workstream → owner mapping
 const WORKSTREAM_OWNER = {
+  // Anannya — Legal & Marketing
   'Legal & Content':      't2',
   'Marketing & Channels': 't2',
   'LinkedIn':             't2',
   'Newsletter':           't2',
   'Outreach':             't2',
   'Marketing Engine':     't2',
+  'Other Social':         't2',
+  'Legal & Finance':      't2',
+  // Shivam — Backend / Build
   'Functional':           't3',
   'Performance':          't3',
   'Build':                't3',
   'Store Prep':           't3',
+  'Auth':                 't3',
+  'Submit & Launch':      't3',
+  // Mudita — Frontend / Setup
   'Website/PWA':          't4',
   'Setup':                't4',
+  'Support':              't4',
+  // Annie — Product / Ops / default
+  'Day-of':               't1',
+  'Iterate':              't1',
+  'Ops & Team':           't1',
+  'Fundraising':          't1',
 };
 
 function assignOwner(workstream, phase) {
@@ -40,18 +53,18 @@ function makeTask(o) {
   const phase = o.phaseName || o.phase || '';
   const owner_id = assignOwner(workstream, phase);
   return {
-    id: uid(),
+    id: o.id || uid(),
     title: o.task || o.title || 'Untitled',
     description: '',
     status: o.status || 'Open',
     phase,
     workstream,
     priority: o.critical === 'YES' ? 'Critical' : o.priority || 'Normal',
-    due_date: to2026(o.dueDate || null),
+    due_date: o.dueDate ? to2026(o.dueDate) : (o.due_date || null),
     owner_id,
     assignee_ids: [owner_id],
     mentioned_ids: [],
-    parent_id: null,
+    parent_id: o.parent_id || null,
     tags: o.tags ? (Array.isArray(o.tags) ? o.tags : [o.tags]) : [],
     links: [],
     notes: o.notes || '',
@@ -75,7 +88,7 @@ const STORAGE_KEY   = 'yuki_tracker_tasks';
 const TEAM_KEY      = 'yuki_tracker_team';
 const COMMENTS_KEY  = 'yuki_tracker_comments';
 const VERSION_KEY   = 'yuki_tracker_version';
-const CURRENT_VER   = 'v6'; // bump to force re-seed: original month/day, year→2026
+const CURRENT_VER   = 'v7'; // bump to force re-seed: 107 tasks + 221 subtasks from Launch_Tracker 2.xlsx
 
 function saveTasks(tasks) { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
 
